@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "urls": [
+    "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator_en",
+    "https://www.eurekanetwork.org/open-calls/",
+    "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-search"
+  ],
+  "grants": [
+    {
+      "id": "call_scraped_1773994156942_mock",
+      "title": "Scraped Demonstrator - Innovation Fund (78)",
+      "programme": "Innovation Fund",
+      "status": "Open",
+      "startDate": "2026-03-20",
+      "deadline": "2026-04-19",
+      "budget": "€1.2M",
+      "url": "https://example.com/demo",
+      "visible": true
+    }
+  ],
+  "timestamp": "2026-03-20T08:09:16.943Z"
+}
