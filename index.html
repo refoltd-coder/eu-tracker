@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-width=1.0">
+    <title>Refo Consulting - EU Funding Calls Tracker</title>
+    
+    <!-- Google Fonts for typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- vis-timeline CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis-timeline/7.7.2/vis-timeline-graph2d.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-timeline/7.7.2/vis-timeline-graph2d.min.js"></script>
+    
+    <style>
+        :root {
+            /* Corporate Navy Blue Palette */
+            --primary-navy: #0F204B;
+            --secondary-navy: #1D3A82;
+            --accent-light: #F0F4F8;
+            --text-main: #333333;
+            --text-light: #666666;
+            --white: #FFFFFF;
+            --border-light: #E2E8F0;
+            
+            /* Programme Colors */
+            --color-horizon: #1D3A82;   /* Horizon Europe - Navy */
+            --color-eureka: #008080;    /* Eureka - Teal */
+            --color-erasmus: #E65A28;   /* Erasmus+ - Orange */
+            --color-digital: #7B1FA2;   /* Digital Europe - Purple */
+            --color-life: #2E7D32;      /* LIFE Programme - Green */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            background-color: #F8FAFC;
+        }
+
+        /* ---------------- HEADER ---------------- */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: var(--white);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-navy);
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            font-weight: 300;
+            color: var(--secondary-navy);
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-input, .filter-select {
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+            color: var(--text-main);
+            background-color: var(--white);
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            border-color: var(--secondary-navy);
+            box-shadow: 0 0 0 2px rgba(29, 58, 130, 0.1);
+        }
+
+        .filter-input {
+            width: 250px;
+        }
+
+        /* ---------------- MAIN BODY ---------------- */
+        main {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .timeline-header {
+            margin-bottom: 2rem;
+        }
+        
+        .timeline-header h1 {
+            font-size: 1.8rem;
+            color: var(--primary-navy);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-header p {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        .timeline-container {
+            background-color: var(--white);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.02);
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        /* ---------------- VIS-TIMELINE OVERRIDES ---------------- */
+        .vis-timeline {
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .vis-item {
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--white);
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        
+        .vis-item:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .vis-item .vis-item-content {
+            padding: 6px 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Program Colors */
+        .vis-item.horizon { background-color: var(--color-horizon); }
+        .vis-item.eureka { background-color: var(--color-eureka); }
+        .vis-item.erasmus { background-color: var(--color-erasmus); }
+        .vis-item.digital { background-color: var(--color-digital); }
+        .vis-item.life { background-color: var(--color-life); }
+
+        /* Left-side labels */
+        .vis-label {
+            font-weight: 600;
+            color: var(--primary-navy);
+            display: flex;
+            align-items: center;
+        }
+
+        /* ---------------- MODAL ---------------- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(15, 32, 75, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--white);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            color: var(--white);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: var(--white);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .modal-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .modal-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            background: var(--accent-light);
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-light);
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .detail-value {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--primary-navy);
+        }
+
+        .modal-desc {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-main);
+            margin-bottom: 2rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-navy);
+            color: var(--white);
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background-color 0.2s, transform 0.1s;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-navy);
+            transform: translateY(-1px);
+        }
+
+        /* ---------------- RESPONSIVE ---------------- */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            .filters {
+                flex-wrap: wrap;
+                width: 100%;
+            }
+            .filter-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Content -->
+    <header>
+        <div class="logo-container">
+            <div class="logo">Refo <span>Consulting</span></div>
+        </div>
+        <div class="filters">
+            <input type="text" id="searchInput" class="filter-input" placeholder="Search by Call Title...">
+            
+            <select id="programmeFilter" class="filter-select">
+                <option value="All">All Programmes</option>
+                <option value="Horizon Europe">Horizon Europe</option>
+                <option value="Eureka">Eureka</option>
+                <option value="Erasmus+">Erasmus+</option>
+                <option value="Digital Europe">Digital Europe</option>
+                <option value="LIFE Programme">LIFE Programme</option>
+            </select>
+            
+            <select id="statusFilter" class="filter-select">
+                <option value="All">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Upcoming">Upcoming</option>
+                <option value="Closed">Closed</option>
+            </select>
+        </div>
+    </header>
+
+    <!-- Main Content Application -->
+    <main>
+        <div class="timeline-header">
+            <h1>EU Funding Calls Tracker</h1>
+            <p>Interactive timeline tracking major European funding opportunities and grant deadlines.</p>
+        </div>
+
+        <div class="timeline-container" id="timeline"></div>
+    </main>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="callModal">
+        <div class="modal-card">
+            <div class="modal-header" id="modalHeaderBg">
+                <button class="modal-close" id="modalClose">&times;</button>
+                <h2 class="modal-title" id="modalTitle">Call Title</h2>
+                <div class="modal-subtitle" id="modalSubtitle">Programme Name</div>
+            </div>
+            
+            <div class="modal-body">
+                <div class="modal-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Open Date</span>
+                        <span class="detail-value" id="modalOpen">YYYY-MM-DD</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Deadline</span>
+                        <span class="detail-value" id="modalDeadline">YYYY-MM-DD</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Budget</span>
+                        <span class="detail-value" id="modalBudget">€0M</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value" id="modalStatus">Active</span>
+                    </div>
+                </div>
+                
+                <p class="modal-desc" id="modalDesc">Description goes here.</p>
+                
+                <div class="modal-footer">
+                    <a href="#" target="_blank" class="btn-primary" id="modalLink">Go to Official Call Page</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Utilities to manage date status
+        function getCallStatus(openDateStr, deadlineStr) {
+            const now = new Date();
+            const openDate = new Date(openDateStr);
+            const deadline = new Date(deadlineStr);
+            
+            if (now > deadline) return "Closed";
+            if (now < openDate) return "Upcoming";
+            return "Active";
+        }
+
+        function formatDate(dateStr) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateStr).toLocaleDateString(undefined, options);
+        }
+
+        // Mock Data Array for EU Calls
+        const callsData = [
+            {
+                id: 1,
+                title: "Erasmus+ Sport 2026 Collaborative Partnerships",
+                programme: "Erasmus+",
+                cssClass: "erasmus",
+                color: "var(--color-erasmus)",
+                openDate: "2026-01-15",
+                deadline: "2026-03-24",
+                budget: "€50M",
+                description: "Support for collaborative partnerships in the field of sport, focusing on integrity in sport, promoting European traditional sports and games, and supporting the mobility of volunteers.",
+                url: "https://erasmus-plus.ec.europa.eu/funding"
+            },
+            {
+                id: 2,
+                title: "Advanced AI and Cybersecurity Hubs",
+                programme: "Digital Europe",
+                cssClass: "digital",
+                color: "var(--color-digital)",
+                openDate: "2025-11-01",
+                deadline: "2026-02-15",
+                budget: "€105M",
+                description: "Creating European Digital Innovation Hubs to advance AI, Cybersecurity, and High-Performance Computing across multiple member states.",
+                url: "https://digital-strategy.ec.europa.eu/en/activities/digital-programme"
+            },
+            {
+                id: 3,
+                title: "Eurostars 3 - Cut-off 10",
+                programme: "Eureka",
+                cssClass: "eureka",
+                color: "var(--color-eureka)",
+                openDate: "2026-02-10",
+                deadline: "2026-04-10",
+                budget: "€25M (estimated via member states)",
+                description: "International funding programme for innovative SMEs wishing to collaborate on R&D projects that will result in a rapid commercialization phase.",
+                url: "https://www.eurekanetwork.org/programmes/eurostars/"
+            },
+            {
+                id: 4,
+                title: "EIC Accelerator Open 2026",
+                programme: "Horizon Europe",
+                cssClass: "horizon",
+                color: "var(--color-horizon)",
+                openDate: "2026-05-01",
+                deadline: "2026-10-01",
+                budget: "€600M",
+                description: "Funding and investments through the EIC Fund for individual start-ups and small companies to develop and scale up game-changing innovations.",
+                url: "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator_en"
+            },
+            {
+                id: 5,
+                title: "LIFE Nature and Biodiversity SAPs",
+                programme: "LIFE Programme",
+                cssClass: "life",
+                color: "var(--color-life)",
+                openDate: "2026-04-15",
+                deadline: "2026-09-01",
+                budget: "€135M",
+                description: "Standard Action Projects aiming to halt and reverse biodiversity loss, supporting the implementation of the EU Birds and Habitats Directives.",
+                url: "https://cinea.ec.europa.eu/programmes/life_en"
+            },
+            {
+                id: 6,
+                title: "Clean Hydrogen Partnership Call",
+                programme: "Horizon Europe",
+                cssClass: "horizon",
+                color: "var(--color-horizon)",
+                openDate: "2026-01-31",
+                deadline: "2026-05-28",
+                budget: "€120M",
+                description: "Research and innovation accelerating the development and deployment of clean hydrogen technologies in Europe.",
+                url: "https://www.clean-hydrogen.europa.eu/"
+            },
+            {
+                id: 7,
+                title: "Digital Europe - Cloud-to-Edge Infrastructure",
+                programme: "Digital Europe",
+                cssClass: "digital",
+                color: "var(--color-digital)",
+                openDate: "2026-08-01",
+                deadline: "2026-11-15",
+                budget: "€50M",
+                description: "Deployment of highly secure, ultra-low latency, decentralized, and environmentally sustainable cloud-to-edge solutions.",
+                url: "https://digital-strategy.ec.europa.eu/"
+            }
+        ];
+
+        // Prepare Timeline Data
+        const groupsData = new vis.DataSet([
+            { id: 'Horizon Europe', content: 'Horizon Europe' },
+            { id: 'Eureka', content: 'Eureka' },
+            { id: 'Erasmus+', content: 'Erasmus+' },
+            { id: 'Digital Europe', content: 'Digital Europe' },
+            { id: 'LIFE Programme', content: 'LIFE Programme' }
+        ]);
+
+        const itemsDataset = new vis.DataSet();
+
+        function populateTimeline(filterSearch = "", filterProgramme = "All", filterStatus = "All") {
+            const filteredData = callsData.filter(call => {
+                const searchMatch = call.title.toLowerCase().includes(filterSearch.toLowerCase());
+                const programmeMatch = filterProgramme === "All" || call.programme === filterProgramme;
+                
+                const cStatus = getCallStatus(call.openDate, call.deadline);
+                const statusMatch = filterStatus === "All" || cStatus === filterStatus;
+
+                return searchMatch && programmeMatch && statusMatch;
+            });
+
+            // Map valid data to Vis Timeline format
+            const targetItems = filteredData.map(call => ({
+                id: call.id,
+                group: call.programme,
+                content: call.title,
+                start: call.openDate,
+                end: call.deadline,
+                className: call.cssClass,
+                type: 'range'
+            }));
+
+            // Sync dataset instead of recreating Timeline component (better performance)
+            itemsDataset.clear();
+            itemsDataset.add(targetItems);
+        }
+
+        // Initialize vis-timeline Configuration
+        const container = document.getElementById('timeline');
+        const options = {
+            groupOrder: 'content',
+            min: new Date(2025, 6, 1),   // Constrain view window
+            max: new Date(2027, 11, 31),
+            start: new Date(2025, 9, 1), // Initial display focus
+            end: new Date(2027, 2, 1),
+            timeAxis: { scale: 'month', step: 1 },
+            zoomMin: 1000 * 60 * 60 * 24 * 31 * 2,  // 2 months min zoom
+            zoomMax: 1000 * 60 * 60 * 24 * 31 * 24, // 24 months max zoom
+            margin: {
+                item: { horizontal: 0, vertical: 10 },
+                axis: 5
+            },
+            verticalScroll: true,
+            zoomKey: 'ctrlKey'
+        };
+
+        const timeline = new vis.Timeline(container, itemsDataset, groupsData, options);
+
+        // Map Click Event to Modal
+        timeline.on('select', function (properties) {
+            if (properties.items.length > 0) {
+                const itemId = properties.items[0];
+                const call = callsData.find(c => c.id === itemId);
+                if (call) {
+                    openModal(call);
+                }
+            }
+        });
+
+        // Event Listeners for Filters
+        document.getElementById('searchInput').addEventListener('input', updateFilters);
+        document.getElementById('programmeFilter').addEventListener('change', updateFilters);
+        document.getElementById('statusFilter').addEventListener('change', updateFilters);
+
+        function updateFilters() {
+            const search = document.getElementById('searchInput').value;
+            const prog = document.getElementById('programmeFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            populateTimeline(search, prog, status);
+        }
+
+        // Modal Logic
+        const modal = document.getElementById('callModal');
+        const modalCloseBtn = document.getElementById('modalClose');
+        
+        function openModal(call) {
+            document.getElementById('modalTitle').innerText = call.title;
+            document.getElementById('modalSubtitle').innerText = call.programme;
+            document.getElementById('modalHeaderBg').style.backgroundColor = call.color;
+            
+            document.getElementById('modalOpen').innerText = formatDate(call.openDate);
+            document.getElementById('modalDeadline').innerText = formatDate(call.deadline);
+            document.getElementById('modalBudget').innerText = call.budget;
+            
+            const status = getCallStatus(call.openDate, call.deadline);
+            const statusBadge = document.getElementById('modalStatus');
+            statusBadge.innerText = status;
+            
+            if (status === "Active") statusBadge.style.color = "#E65A28"; // Orange-ish
+            else if (status === "Upcoming") statusBadge.style.color = "#008080"; // Teal
+            else statusBadge.style.color = "#666666"; // Grey
+            
+            document.getElementById('modalDesc').innerText = call.description;
+            document.getElementById('modalLink').href = call.url;
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            timeline.setSelection([]); // clear vis-timeline selection highlight
+        }
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal(); // Close if clicking outside the card
+        });
+
+        // Initialize state
+        populateTimeline();
+    </script>
+</body>
+</html>

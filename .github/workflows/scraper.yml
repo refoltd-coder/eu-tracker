@@ -1,0 +1,40 @@
+name: Run EU Grants Scraper
+
+on:
+  schedule:
+    # Runs at 02:00 UTC every day
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Allows manual triggering from the GitHub Actions UI or via API
+  
+jobs:
+  scrape-and-commit:
+    runs-on: ubuntu-latest
+    
+    # Needs permissions to push to repo
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Scraper
+        run: npm run scrape
+
+      - name: Commit Updated Data
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data.json
+          # Only commit if there are changes
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(data): auto-update eu grants data.json" && git push)
