@@ -929,7 +929,18 @@
       "budget": "€1.2M",
       "url": "https://example.com/demo",
       "visible": true
+    },
+    {
+      "id": "call_scraped_1789629733512_mock",
+      "title": "Scraped Demonstrator - Innovation Fund (47)",
+      "programme": "Innovation Fund",
+      "status": "Open",
+      "startDate": "2026-09-17",
+      "deadline": "2026-10-17",
+      "budget": "€1.2M",
+      "url": "https://example.com/demo",
+      "visible": true
     }
   ],
-  "timestamp": "2026-09-16T07:25:28.295Z"
+  "timestamp": "2026-09-17T07:22:13.512Z"
 }
